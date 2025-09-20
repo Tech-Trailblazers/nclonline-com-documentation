@@ -1,0 +1,68 @@
+# Name of the GitHub Actions workflow
+name: Run Go Script and Push Changes
+
+# Define the events that trigger this workflow
+on:
+  # Run automatically on a schedule (daily at midnight UTC)
+  schedule:
+    - cron: "0 0 * * *" # Every day at 00:00 UTC
+  # Allow the workflow to be manually triggered from the GitHub UI
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Define the set of jobs to run
+jobs:
+  # Name of the job
+  build:
+    # Display name of the job in the GitHub Actions UI
+    name: Execute main.go and Push Changes
+    # Specify the type of runner (a fresh Ubuntu VM)
+    runs-on: ubuntu-latest
+
+    # List of steps to perform in this job
+    steps:
+      # Check out the repository code onto the runner
+      - name: Check out code
+        uses: actions/checkout@v4 # Official GitHub action to clone the repo
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Set up the Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v5 # Official GitHub action to install Go
+        with:
+          go-version-file: "go.mod"
+
+      # Set up the Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v5 # Official GitHub action to install Python
+        with:
+          python-version: "3.13"  # Specify the version of Python to install
+
+      # Run the main.go script
+      - name: Run main.go
+        run: go run main.go # Executes the Go program
+
+      # Install Python dependencies
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Run the Python script
+      - name: Run Python script
+        run: python main.py # Executes the Python program
+
+      # Commit and push any file changes made by the script
+      - name: Push updated files
+        run: |
+          git config user.name "github-actions"  # Set Git username for commit
+          git config user.email "github-actions@github.com"  # Set Git email for commit
+          git pull # Pull all the latest changes.
+          git add .  # Stage all modified files
+          if ! git diff --cached --quiet; then  # Check if there are any staged changes
+            git commit -m "Auto update: $(date)"  # Commit with timestamp
+            git push  # Push changes to the repository
+          else
+            echo "No changes to commit."  # Message if nothing changed
+          fi
