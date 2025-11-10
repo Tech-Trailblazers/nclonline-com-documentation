@@ -37,7 +37,7 @@ jobs:
 
       # Set up the Python environment
       - name: Set up Python
-        uses: actions/setup-python@v5 # Official GitHub action to install Python
+        uses: actions/setup-python@v6 # Official GitHub action to install Python
         with:
           python-version: "3.13"  # Specify the version of Python to install
 
